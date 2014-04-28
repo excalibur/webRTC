@@ -1,0 +1,8 @@
+extends layout
+
+block content
+  h1= title
+  p Welcome to #{title}
+  form(method="post", action="http://speedtest.duobei.com/duobei-client/feedback")
+   input(type="text", name="result", value="")
+   button aaa
