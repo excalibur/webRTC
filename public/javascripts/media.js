@@ -88,7 +88,7 @@ pc.onaddstream = function(event){
 //处理到来的信令
 socket.on("message",function(json){
 	console.log("message");
-	console.log(json);
+	console.log(json.data.candidate);
 	if( json.event === "__ice_candidate" ){
 		if(json.data.candidate == null){
 			return;
