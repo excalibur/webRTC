@@ -9,8 +9,10 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 
 var app = express();
-var server = require('http').createServer(app)
+var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
+
+server.listen(80);
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -24,7 +26,7 @@ app.use(require('less-middleware')({ src: path.join(__dirname, 'public') }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
-app.use('/users', users);
+
 
 /// catch 404 and forwarding to error handler
 app.use(function(req, res, next) {
@@ -59,10 +61,15 @@ app.use(function(err, req, res, next) {
 
 
 io.sockets.on('connection', function (socket) {
-  socket.emit('news', { hello: 'world' });
-  socket.on('my other event', function (data) {
-    console.log(data);
+
+ var config = require('./config/config');
+  socket.broadcast.emit('users', config.users);
+
+  socket.on("icecandidate",function(data){
+    socket.broadcast.emit("message", data);
   });
+
 });
+
 
 module.exports = app;

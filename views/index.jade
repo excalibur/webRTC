@@ -1,8 +1,97 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
-  form(method="post", action="http://speedtest.duobei.com/duobei-client/feedback")
-   input(type="text", name="result", value="")
-   button aaa
+	div.container-fluid
+		div.row
+			div.col-lg-12
+				div.panel.panel-default
+					div.panel-heading
+						div.container-fluid
+							ul.nav.navbar-nav
+								li
+									button(type="button", data-id="brush").btn.btn-default
+										i.typcn.typcn-brush
+								li
+									button(type="button", data-id="pencil").btn.btn-default 
+										i.glyphicon.glyphicon-pencil
+								li
+									button(type="button", data-id="arrows").btn.btn-default
+										i.fa.fa-arrows
+								li
+									button(type="button", data-id="eraser").btn.btn-default
+										i.fa.fa-eraser
+								li
+									button(type="button", data-id="tachometer").btn.btn-default
+										i.fa.fa-tachometer
+								li
+									button(type="button", data-id="picture").btn.btn-default
+										i.glyphicon.glyphicon-picture
+							ul.nav.navbar-nav.pull-right
+								li
+									ul.nav.navbar-nav#media
+										li
+											button(type="button", data-id="volume").btn.btn-default
+												i.glyphicon.glyphicon-volume-up
+										li
+											button(type="button", data-id="video").btn.btn-default
+												i.glyphicon.glyphicon-facetime-video
+								li
+
+									ul.nav.navbar-nav
+										li
+											button(type="button", id="chatBtn").btn.btn-default
+												i.glyphicon.glyphicon-comment
+											button(type="button", id="settingBtn").btn.btn-default
+												i.glyphicon.glyphicon-cog
+							
+					div.panel-body 
+						div.container-fluid#main
+							div.row
+								div.col-lg-12#blackboard
+									ul.list-inline#videos
+									canvas()#painter
+								div#chat.col-lg-3.hidden
+									div.message-receive
+										div.media.media-msg
+											a(href="#").pull-left
+												img(src="/images/faith.jpg").media-object.media-avator
+											div.media-body
+												h4.media-header aaaa
+												p adsdasdasdasdasdasdasdasd
+
+												
+										
+									div.message-send
+										div.panel.panel-info
+											div.panel-heading
+												button(type="button", id="").btn.btn-default
+													i.glyphicon.glyphicon-font
+												button(type="button", id="").btn.btn-default
+													span.fa.fa-smile-o
+												button(type="button", id="").btn.btn-default
+													span.glyphicon.glyphicon-picture
+											div.panel-body
+												textarea(id="sendMsg", placeholder="请输入聊天内容")
+											div.panel-footer
+												button(type="button", id="").btn.btn-default
+													i.glyphicon.glyphicon-heart
+												button(type="button", id="sendMsgBtn").btn.btn-default.pull-right
+													i.glyphicon.glyphicon-send
+													|  发送
+														
+										
+
+
+
+	div(id="settingModal", tabindex="-1",role="dialog",aria-hidden="true").modal.fade
+		div.modal-dialog.modal-lg
+			div.modal-content
+				div.modal-header
+					button(type="button",data-dismiss="modal",aria-hidden="true").close
+						&times;
+					h4.modal-title 房间设置
+				div.modal-body
+					form(id="", method="", action="", role="form").form-inline
+
+				div.modal-footer
+					button(type="button").btn.btn-default 保存
