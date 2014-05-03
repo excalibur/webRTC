@@ -65,9 +65,10 @@ io.sockets.on('connection', function (socket) {
  var config = require('./config/config');
   socket.broadcast.emit('users', config.users);
 
-  socket.on("icecandidate",function(data){
+  socket.on("candidate",function(data){
     socket.broadcast.emit("message", data);
   });
+
 
 });
 

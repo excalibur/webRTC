@@ -1,21 +1,21 @@
 $(function(){
 
 	
-	  socket.on('users', function (users) {
+	  // socket.on('users', function (users) {
 	    
 
-	    for(var i = 0 ; i < users.length ; i++){
-	    	if (users[i] == $("meta[name=username]").attr("content")) continue;
-	    	var media = $("<div/>");
-	    	media.addClass("media media-msg");
-	    	media.html('<div class="media media-msg"><div class="media-body"><h4 class="media-header">用户<b>'+
-	    		users[i]
-	    		+'</b>加入房间</h4></div></div>');
+	  //   for(var i = 0 ; i < users.length ; i++){
+	  //   	if (users[i] == $("meta[name=username]").attr("content")) continue;
+	  //   	var media = $("<div/>");
+	  //   	media.addClass("media media-msg");
+	  //   	media.html('<div class="media media-msg"><div class="media-body"><h4 class="media-header">用户<b>'+
+	  //   		users[i]
+	  //   		+'</b>加入房间</h4></div></div>');
 
 	    	
-	    	$('#chat .message-receive').append(media);
-	    }
-	  });
+	  //   	$('#chat .message-receive').append(media);
+	  //   }
+	  // });
 
 
 	// 媒体沟通

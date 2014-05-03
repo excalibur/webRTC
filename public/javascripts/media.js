@@ -1,156 +1,169 @@
-// // 初始话
-// var rtcMultiConnection = new RTCMultiConnection();
+// 初始化
 
-// // 默认开启数据传输
-// rtcMultiConnection.session = { data: true };
-
-
-// rtcMultiConnection.sdpConstraints.mandatory = {
-//     OfferToReceiveAudio: true,
-//     OfferToReceiveVideo: true
-// };
-
-// // 自定义签名
-// rtcMultiConnection.openSignalingChannel = function(config){
-// 	// 获取通信地址
-// 	console.log("openSignalingChannel");
-// 	config.channel = config.channel || this.channel;
-// 	console.log(config.channel);
-// }
-// rtcMultiConnection.onopen = function(e) {
-// 	console.log("onopen");
-// }
-// function allowVolume(e){
-// 	console.log('allowVolume');
-// }
-// function allowVideo(e){
-// 	console.log('allowVideo');
-// 	Room.session = {
-// 		audio: true, 
-// 		video: true
-// 	}
-// 	rtcMultiConnection.captureUserMedia(function(stream) {
-//         var streamid = rtcMultiConnection.token();
-//         rtcMultiConnection.customStreams[streamid] = stream;
-
-//         rtcMultiConnection.sendMessage({
-//             hasCamera: true,
-//             streamid: streamid,
-//             session: Room.session 
-//         });
-//     }, Room.session);
-// }
-
- var getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
-
-
-var RTCSessionDescription = window.mozRTCSessionDescription || window.RTCSessionDescription;
-var RTCIceCandidate = window.mozRTCIceCandidate || window.RTCIceCandidate;
-var PeerConnection = (window.PeerConnection ||
-                    window.webkitPeerConnection00 || 
-                    window.webkitRTCPeerConnection || 
-                    window.mozRTCPeerConnection);
-
-//使用Google的stun服务器
-var iceServer = {
-    "iceServers": [{
-        "url": "stun:stun.anyfirewall.com:3478"
-    }]
+var localStream;
+var faith;
+var other;
+var username = $("meta[name=username]").attr("content");
+var sdpConstraints = {
+  'mandatory': {
+    'OfferToReceiveAudio': true,
+    'OfferToReceiveVideo': true
+  }
 };
 
-//创建PeerConnection实例
-var pc = new PeerConnection(iceServer);
 
-// 连接socket.io
-// 
-var socket = io.connect('http://localhost:80');
 
-//发送ICE候选到其他客户端
-pc.onicecandidate = function(event){
-	console.log("onicecandidate");
-    socket.emit("icecandidate",{
-        "event": "__ice_candidate",
-        "data": {
-            "candidate": event.candidate
-        }
+
+
+function allowVolume(e){
+    console.log('allowVolume');
+    call();
+}
+
+function allowVideo(e){
+    console.log('allowVideo');
+
+   start();
+}
+
+
+// 处理流
+function gotStream(stream) {
+  trace('Received local stream');
+  var localVideo = document.createElement("video");
+  localVideo.autoplay = true;
+
+  // 
+  attachMediaStream(localVideo, stream);
+  
+  document.getElementById('videos').appendChild(localVideo);
+  localStream = stream;
+}
+
+
+function gotRemoteStream(e) {
+  var remoteVideo = document.createElement("video");
+  remoteVideo.autoplay = true;
+ document.getElementById('videos').appendChild(remoteVideo);
+  // Call the polyfill wrapper to attach the media stream to this element.
+  attachMediaStream(remoteVideo, e.stream);
+
+ 
+  trace('pc2 received remote stream');
+}
+
+
+function start(){
+     // 打开自己的摄像头和麦克风
+    getUserMedia({
+      audio: true,
+      video: true
+    }, gotStream,
+    function (e) {
+      alert('getUserMedia() error: ' + e.name);
     });
-};
+}
 
-//如果检测到媒体流连接到本地，将其绑定到一个video标签上输出
-pc.onaddstream = function(event){
-	console.log("onaddstream");
-    var video = document.createElement("video");
-    video.autoplay = true;
-    video.src = URL.createObjectURL(event.stream);
-    $("#videos").append(video);
-};
 
-//处理到来的信令
-socket.on("message",function(json){
-	console.log("message");
-	console.log(json.data.candidate);
-	if( json.event === "__ice_candidate" ){
-		if(json.data.candidate == null){
-			return;
-		}
-        pc.addIceCandidate(new RTCIceCandidate(json.data.candidate));
-    } else {
-        pc.setRemoteDescription(new RTCSessionDescription(json.data.sdp));
-    }
-});
- //发送offer和answer的函数，发送本地session描述
-function sendOfferFn(desc){
-	console.log("sendOfferFn");
-	console.log(desc);
-    pc.setLocalDescription(desc);
+function call(){
+    trace('Starting call');
 
-    socket.emit("sendOffer",{ 
-        "event": "__offer",
-        "data": {
-            "sdp": desc
-        }
-    });
-};
+    var startTime = performance.now();
 
-function sendAnswerFn(desc){
-	console.log("sendAnswerFn");
-            pc.setLocalDescription(desc);
-            socket.emit("message",{ 
-                "event": "__answer",
-                "data": {
-                    "sdp": desc
-                }
-            });
-};
+    var videoTracks = localStream.getVideoTracks();
+    var audioTracks = localStream.getAudioTracks();
+    if (videoTracks.length > 0)
+        trace('Using video device: ' + videoTracks[0].label);
+    if (audioTracks.length > 0)
+        trace('Using audio device: ' + audioTracks[0].label);
 
-/** video: 是否接受视频流
-* audio：是否接受音频流
-* MinWidth: 视频流的最小宽度
-* MaxWidth：视频流的最大宽度
-* MinHeight：视频流的最小高度
-* MaxHiehgt：视频流的最大高度
-* MinAspectRatio：视频流的最小宽高比
-* MaxAspectRatio：视频流的最大宽高比
-* MinFramerate：视频流的最小帧速率
-* MaxFramerate：视频流的最大帧速率
- */
-    getUserMedia.call(navigator, {
-        video: true,
-        audio: true
-    }, function(stream) {
-        var video = document.createElement('video');
-        video.src = window.URL.createObjectURL(stream);
-        video.autoplay = true;
-        $("#videos").append(video);
-        //向PeerConnection中加入需要发送的流
-	    pc.addStream(stream);
-	    //如果是发送方则发送一个offer信令，否则发送一个answer信令
-	    if($("meta[name=username]").attr("content") == "faith"){
-	        pc.createOffer(sendOfferFn);
-	    } else {
-	        pc.createAnswer(sendAnswerFn);
-	    }
-    }, function(e) {
-        console.log('Reeeejected!', e);
-    });
+    var servers = null;
 
+    faith = new RTCPeerConnection(servers);
+    trace('Created local peer connection object faith');
+    faith.onicecandidate = function(e) { onIceCandidate(faith, e) };
+
+    other = new RTCPeerConnection(servers);
+    trace('Created remote peer connection object other');
+
+    other.onicecandidate = function(e){ onIceCandidate(other, e) };
+
+    faith.oniceconnectionstatechange = function(e) { onIceStateChange(faith, e) };
+    other.oniceconnectionstatechange = function(e) { onIceStateChange(other, e) };
+
+    other.onaddstream = gotRemoteStream;
+
+    faith.addStream(localStream);
+    trace('Added local stream to faith');
+
+    trace('faith createOffer start');
+    faith.createOffer(onCreateOfferSuccess, onCreateSessionDescriptionError);
+
+}
+
+
+function onCreateOfferSuccess(desc) {
+  trace('Offer from faith\n' + desc.sdp);
+
+  trace('faith setLocalDescription start');
+  faith.setLocalDescription(desc, function() { onSetLocalSuccess(faith); });
+
+  trace('other setRemoteDescription start');
+  other.setRemoteDescription(desc, function() { onSetRemoteSuccess(other); });
+
+  trace('other createAnswer start');
+  // Since the 'remote' side has no media stream we need
+  // to pass in the right constraints in order for it to
+  // accept the incoming offer of audio and video.
+  other.createAnswer(onCreateAnswerSuccess, onCreateSessionDescriptionError,
+                   sdpConstraints);
+}
+
+
+function onCreateSessionDescriptionError(error) {
+  trace('Failed to create session description: ' + error.toString());
+}
+
+
+function onCreateAnswerSuccess(desc) {
+  trace('Answer from other:\n' + desc.sdp);
+
+  trace('other setLocalDescription start');
+  other.setLocalDescription(desc, function() { onSetLocalSuccess(other); });
+
+  trace('pc1 setRemoteDescription start');
+  faith.setRemoteDescription(desc, function() { onSetRemoteSuccess(faith); });
+}
+
+function onSetLocalSuccess(pc) {
+  trace(' setLocalDescription complete');
+}
+
+function onSetRemoteSuccess(pc) {
+  trace(' setRemoteDescription complete');
+}
+
+function onIceCandidate(pc, event) {
+  if (event.candidate) {
+
+    other.addIceCandidate(new RTCIceCandidate(event.candidate),
+        function() { onAddIceCandidateSuccess(pc) },
+        function(err) { onAddIceCandidateError(pc, err); });
+    trace(' ICE candidate: \n' + event.candidate.candidate);
+  }
+}
+
+
+function onAddIceCandidateSuccess(pc) {
+  trace(' addIceCandidate success');
+}
+
+function onAddIceCandidateError(pc, error) {
+  trace(' failed to add ICE Candidate: ' + error.toString());
+}
+
+function onIceStateChange(pc, event) {
+  if (pc) {
+    trace(' ICE state: ' + pc.iceConnectionState);
+  }
+}
