@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+<div>
+        <button id="startBtn">Start</button>
+        <button id="callBtn">Call</button>
+        <button id="hangUpBtn">Hang Up</button>
+    </div>
+    <div>
+        <video id="videoLocal" autoplay></video>
+        <video id="videoRemote" autoplay></video>
+    </div>
+<script type="text/javascript" src="adapter.js"></script>
+
+<script type="text/javascript">
+//Initial peer connection
+var peerLocalConnection, peerRemoteConnection, localStream;
+var iceServer = "";
+//get evry button element by dom
+var startBtn = document.getElementById("startBtn");
+var callBtn = document.getElementById("callBtn");
+var hangUpBtn = document.getElementById("hangUpBtn");
+//Set onclick handler
+startBtn.onclick = start;   //start()
+callBtn.onclick = call; //call()
+hangUpBtn.onclick = hangUp; //hangUp()
+//disable button
+callBtn.disabled = true;
+hangUpBtn.disabled = true;
+
+//start getUserMedia
+function start() {
+    trace("Get audio or video by webcam.");
+ 
+    //Set attribute
+    var id = "videoLocal";
+    var isAudio = false;
+    var isVideo = true;
+ 
+    //Set constraints
+    var constraints =
+    {
+        video: isVideo,
+        audio: isAudio
+    };
+    //Set success handler
+    function success(mediaStream) {
+        trace("GetUserMedia Successful");
+        localStream = mediaStream;
+        video = document.getElementById(id);
+        //output video on videoLocal
+        attachMediaStream(video, mediaStream);
+    }
+    //Set error handler
+    function error(e) {
+        trace("Error by getUserMedia: " + e);
+    }
+    //Start getUserMedia
+    getUserMedia(constraints, success, error);
+    //Set button
+    startBtn.disabled = true;
+    callBtn.disabled = false;
+    hangUpBtn.disabled = false;
+}
+
+//Make a peer to peer connection
+function call() {
+    trace("Call remote peer.");
+    //1.Set Connection handler
+    SetLocalPeerConnection(iceServer);
+    SetRemotePeerConnection(iceServer);
+ 
+    //2.Add local stream to connection
+    peerLocalConnection.addStream(localStream);
+    //3.Create Offer by local peer
+    peerLocalConnection.createOffer(getLocalDescription, descriptionError);
+    //Set button
+    callBtn.disabled = true;
+    hangUpBtn.disabled = false;
+}
+
+function SetLocalPeerConnection() {
+    peerLocalConnection = new RTCPeerConnection();
+ 
+    function localIceCallBack(event) {
+        if (event.candidate) {
+            //send local peer candidate to remote
+            peerRemoteConnection.addIceCandidate(new RTCIceCandidate(event.candidate),
+                addIceCandidateSuccess, addIceCandidateError);
+            trace("Local peer send local candidate : " + event.candidate.candidate + " to remote peer");
+        }
+    }
+    peerLocalConnection.onicecandidate = localIceCallBack;
+}
+ 
+function SetRemotePeerConnection() {
+    peerRemoteConnection = new RTCPeerConnection();
+    
+    var id = document.getElementById("videoRemote");
+ 
+    function remoteIceCallBack(event) {
+        if (event.candidate) {
+            //send remote peer candidate to local
+            peerLocalConnection.addIceCandidate(new RTCIceCandidate(event.candidate),
+                addIceCandidateSuccess, addIceCandidateError);
+            trace("Remote peer send remote candidate : " + event.candidate.candidate + " to local peer");
+        }
+    }
+ 
+    function getStream(e) {
+        trace("Remote get local media stream.");
+        attachMediaStream(id, e.stream);
+    }
+    peerRemoteConnection.onicecandidate = remoteIceCallBack;
+    peerRemoteConnection.onaddstream = getStream;
+}
+ 
+function addIceCandidateSuccess() {
+    trace('AddIceCandidate success.');
+}
+ 
+function addIceCandidateError(error) {
+    trace('Failed to add ICE Candidate: ' + error.toString());
+}
+
+function getLocalDescription(desc) {
+    //local peer set local description
+    peerLocalConnection.setLocalDescription(desc);
+    trace("Remote peer get offer from local peer. \n" + desc.sdp);
+    //remote peer set remote description
+    peerRemoteConnection.setRemoteDescription(desc);
+ 
+    peerRemoteConnection.createAnswer(getRemoteDescription, descriptionError);
+}
+ 
+function getRemoteDescription(desc) {
+    //remote peer set local description
+    peerRemoteConnection.setLocalDescription(desc);
+    trace("Local peer get offer from remote peer. \n" + desc.sdp);
+    //local peer set remote description
+    peerLocalConnection.setRemoteDescription(desc);
+}
+ 
+function descriptionError(error) {
+    trace("Failed to create description : " + error.toString());
+}
+
+function hangUp() {
+    trace("Stop a call.");
+    peerLocalConnection.close();
+    peerRemoteConnection.close();
+    peerLocalConnection = null;
+    peerRemoteConnection = null;
+    //Set button
+    callBtn.disabled = false;
+    hangUpBtn.disabled = true;
+}
+</script>
+</body>
+</html>
