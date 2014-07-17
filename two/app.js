@@ -58,4 +58,20 @@ app.use(function(err, req, res, next) {
 });
 
 
+<<<<<<< HEAD:two/app.js
+=======
+io.sockets.on('connection', function (socket) {
+
+ var config = require('./config/config');
+  socket.broadcast.emit('users', config.users);
+
+  socket.on("candidate",function(data){
+    socket.broadcast.emit("message", data);
+  });
+
+
+});
+
+
+>>>>>>> f847b6d72ca66dde11ce765e1da6496994c764ed:app.js
 module.exports = app;
