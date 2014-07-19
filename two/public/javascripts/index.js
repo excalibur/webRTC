@@ -83,13 +83,48 @@ function saveToDisk(fileUrl, fileName) {
     save.dispatchEvent(event);
     (window.URL || window.webkitURL).revokeObjectURL(save.href);
 }
+MediaStreamTrack.getSources(function(sourceInfos) {
+  var audioSource = null;
+  var videoSource = null;
 
+  for (var i = 0; i != sourceInfos.length; ++i) {
+    var sourceInfo = sourceInfos[sourceInfos.length-1];
+    console.log(sourceInfo);
+    if (sourceInfo.kind === 'audio') {
+      console.log(sourceInfo.id, sourceInfo.label || 'microphone');
+
+      audioSource = sourceInfo.id;
+    } else if (sourceInfo.kind === 'video') {
+      console.log(sourceInfo.id, sourceInfo.label || 'camera');
+
+      videoSource = sourceInfo.id;
+    } else {
+      console.log('Some other kind of source: ', sourceInfo);
+    }
+  }
+
+  sourceSelected(audioSource, videoSource);
+});
+var constraints = null;
+function sourceSelected(audioSource, videoSource) {
+
+  constraints = {
+    audio: {
+      optional: [{sourceId: audioSource}]
+    },
+    video: {
+      optional: [{sourceId: videoSource}]
+    }
+  };
+
+  
+}
 function server(){
 	trace("服务器启动");
 
 
 	
- 	navigator.getUserMedia({video: true,audio: true},
+ 	navigator.getUserMedia(constraints,
           function(stream) {
 
           	localStream = stream;
