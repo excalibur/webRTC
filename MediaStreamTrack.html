@@ -29,6 +29,9 @@
 
         testBtn = document.getElementById('test');
         testBtn.addEventListener("click",function(){
+            // 清除上次节点
+            var videos = document.getElementsByTagName('video');
+            videos.length && videos[0].remove();
             getUserMedia(sources);
         });
     }
