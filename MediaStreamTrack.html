@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello World Web RTC</title>
+</head>
+<body>
+<select id="changeMedia"></select>
+
+<button id="test">测试</button>
+
+<script type="text/javascript" src="js/adapter.js"></script>
+<script type="text/javascript">
+
+    var sources, changeMedia, testBtn, constraints;
+    window.onload = function(){
+        changeMedia = document.getElementById('changeMedia');
+
+        // 获取摄像头信息
+        MediaStreamTrack.getSources(function (media_sources) {
+            sources = [];
+            for (var i = 0; i < media_sources.length; i++) {
+                sources.push(media_sources[i]);
+            }
+
+            getAllUserMedias(sources);
+            sources = media_sources;
+          
+        });
+
+        testBtn = document.getElementById('test');
+        testBtn.addEventListener("click",function(){
+            getUserMedia(sources);
+        });
+    }
+
+    // 生成html节点
+    function getAllUserMedias(sources){
+        for (var i = 0; i < sources.length; i++) {
+            var option = document.createElement("option");
+            option.innerHTML = sources[i].kind + "-" + sources[i].id + "-" + sources[i].label + "-" + sources[i].facing;
+            option.value = i;
+           changeMedia.appendChild(option);
+        };
+        
+    }
+
+    // 使用摄像头
+    function getUserMedia(sources){
+        var id = changeMedia.value;
+        
+        constraints = {};
+
+
+        if (sources[id].kind == 'audio') {
+            constraints.audio = {
+                optional: [{
+                    sourceId: sources[id].id
+                }]
+            };
+        }
+
+        if (sources[id].kind == 'video') {
+            constraints.video = {
+                optional: [{
+                    sourceId: sources[id].id
+                }]
+            };
+
+        }
+       
+       navigator.getUserMedia(constraints,function(stream){
+        //创建一个承载流的标签
+            var video = document.createElement("video");
+            attachMediaStream(video, stream);
+            // 添加入节点
+            document.body.appendChild(video);
+            // 流默认是暂停的  让其自动播放
+            video.autoplay = true;
+        },function(error) {
+            console.log("Video capture error: ", error.code);
+        });
+        
+    }
+</script>
+</body>
+</html>

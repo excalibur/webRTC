@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello World Web RTC</title>
+</head>
+<body>
+
+
+<script type="text/javascript" src="adapter.js"></script>
+<script type="text/javascript">
+    navigator.getUserMedia({video: true},function(stream){
+        //创建一个承载流的标签
+        var video = document.createElement("video");
+        attachMediaStream(video, stream);
+        // 添加入节点
+        document.body.appendChild(video);
+        // 流默认是暂停的  让其自动播放
+        video.autoplay = true;
+    },function(error) {
+        console.log("Video capture error: ", error.code);
+    });
+</script>
+</body>
+</html>
